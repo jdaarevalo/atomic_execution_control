@@ -11,8 +11,7 @@ setup(
     url='https://github.com/jdaarevalo/lambda_dynamo_lock',
     packages=find_packages(),
     install_requires=[
-        'boto3',
-        'aws-lambda-powertools'
+        'boto3'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -1,13 +1,13 @@
 # dynamodb operations to ensure atomic executions
 import boto3
+import logging
 import time
 
 from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
-from aws_lambda_powertools import Logger
 
 class LambdaDynamoLock:
-    def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1', endpoint_url:str=None, logger:Logger=None):
+    def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1', endpoint_url:str=None, logger=None):
         self.table_name = table_name
         self.primary_key = primary_key
         self.region_name = region_name
@@ -21,7 +21,11 @@ class LambdaDynamoLock:
         self.STATUS_EXECUTION_FINISHED = "FINISHED"
         self.STATUS_EXECUTION_IN_PROGRESS = "IN_PROGRESS"
         # Initialize or use the provided logger
-        self.logger = logger if logger else Logger()
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = logging.getLogger(__name__)
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     # method to write atomically a primary_key
     def write_atomically_a_key(self, key:str, status:str = None) -> bool:
