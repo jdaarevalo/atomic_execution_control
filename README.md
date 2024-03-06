@@ -24,7 +24,7 @@ A DynamoDB table set up for tracking execution statuses.
 # Usage
 Below is a quick example to help you get started:
 
-```bash
+```python
 from lambda_dynamo_lock import LambdaDynamoLock
 import os
 
@@ -60,6 +60,7 @@ else:
     print("Task already in progress by another instance.")
     # wait until other instances with the same key finish
     ldl.wait_other_instances_finish(keys=[date_to_run])
+
 ```
 
 ## Configuration
