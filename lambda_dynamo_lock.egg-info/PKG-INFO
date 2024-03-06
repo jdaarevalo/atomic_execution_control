@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: lambda-dynamo-lock
-Version: 0.1.1
+Version: 0.1.2
 Summary: A utility for atomic DynamoDB operations in AWS Lambda functions
 Home-page: https://github.com/jdaarevalo/lambda_dynamo_lock
 Author: Jose David Arevalo
@@ -11,7 +11,6 @@ Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: boto3
-Requires-Dist: aws-lambda-powertools
 
 # LambdaDynamoLock
 

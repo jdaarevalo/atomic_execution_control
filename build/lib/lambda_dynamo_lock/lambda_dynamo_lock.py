@@ -1,13 +1,36 @@
 # dynamodb operations to ensure atomic executions
 import boto3
+import logging
 import time
+import json
 
 from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
-from aws_lambda_powertools import Logger
+
+# Import Logger from aws_lambda_powertools if available, else define a dummy Logger
+try:
+    from aws_lambda_powertools import Logger
+except ImportError:
+    class Logger:
+        def __init__(self, *args, **kwargs):
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(logging.INFO)
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
+
+        def info(self, message):
+            self.logger.info(message)
+
+        def warning(self, message):
+            self.logger.warning(message)
+
+        def error(self, message):
+            self.logger.error(message)
 
 class LambdaDynamoLock:
-    def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1', endpoint_url:str=None, logger:Logger=None):
+    def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1', endpoint_url:str=None, logger=None):
         self.table_name = table_name
         self.primary_key = primary_key
         self.region_name = region_name
@@ -22,6 +45,14 @@ class LambdaDynamoLock:
         self.STATUS_EXECUTION_IN_PROGRESS = "IN_PROGRESS"
         # Initialize or use the provided logger
         self.logger = logger if logger else Logger()
+
+    def _log(self, level, message, **kwargs):
+        if hasattr(self.logger, 'structure_logs'):  # Check if aws_lambda_powertools.Logger
+            structured_message = {**message, **kwargs}
+            getattr(self.logger, level)(structured_message)
+        else:  # Fallback to standard logging
+            log_message = json.dumps({"message": message, **kwargs})
+            getattr(logging, level)(log_message)
 
     # method to write atomically a primary_key
     def write_atomically_a_key(self, key:str, status:str = None) -> bool:

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lambda_dynamo_lock',
-    version='0.1.1',
+    version='0.1.2',
     author='Jose David Arevalo',
     author_email='jdaarevalo@gmail.com',
     description='A utility for atomic DynamoDB operations in AWS Lambda functions',
