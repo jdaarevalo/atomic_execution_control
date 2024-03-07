@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='lambda_dynamo_lock',
-    version='0.1.2',
+    name='atomic_execution_control',
+    version='0.1.3',
     author='Jose David Arevalo',
     author_email='jdaarevalo@gmail.com',
-    description='A utility for atomic DynamoDB operations in AWS Lambda functions',
+    description='A utility for atomic DynamoDB operations in AWS Lambda, Fargate, EC2 ... functions',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/jdaarevalo/lambda_dynamo_lock',
+    url='https://github.com/jdaarevalo/atomic_execution_control',
     packages=find_packages(),
     install_requires=[
         'boto3'

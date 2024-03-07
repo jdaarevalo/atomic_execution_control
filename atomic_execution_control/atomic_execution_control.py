@@ -29,14 +29,17 @@ except ImportError:
         def error(self, message):
             self.logger.error(message)
 
-class LambdaDynamoLock:
-    def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1', endpoint_url:str=None, logger=None):
+class AtomicExecutionControl:
+    def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1',
+                 endpoint_url:str=None, logger=None):
         self.table_name = table_name
         self.primary_key = primary_key
         self.region_name = region_name
         self.endpoint_url = endpoint_url
-        self.dynamodb_resource = boto3.resource('dynamodb', region_name=self.region_name, endpoint_url=self.endpoint_url)
-        self.dynamodb_client = boto3.client('dynamodb', region_name=self.region_name, endpoint_url=self.endpoint_url)
+        self.dynamodb_resource = boto3.resource('dynamodb', region_name=self.region_name,
+                                                endpoint_url=self.endpoint_url)
+        self.dynamodb_client = boto3.client('dynamodb', region_name=self.region_name,
+                                            endpoint_url=self.endpoint_url)
         self.table = self.dynamodb_resource.Table(self.table_name)
         self.ITEM_EXECUTION_VALID_FOR = 20 # minutes
         self.TIME_TO_RETRY_CHECK_STATUS = 20 # seconds
@@ -98,12 +101,16 @@ class LambdaDynamoLock:
             return True
 
     #method to delete items based on their status_execution and updated_at values
-    def delete_items_finished_or_old(self, keys: list[str], item_execution_valid_for:int=None) -> None:
-        item_execution_valid_for = item_execution_valid_for if item_execution_valid_for else self.ITEM_EXECUTION_VALID_FOR
-        self.logger.info({"action": "delete_items_finished_or_old", "keys": keys, "message":"start items deletion"})
+    def delete_items_finished_or_old(self, keys: list[str],
+                                     item_execution_valid_for:int=None) -> None:
+        item_execution_valid_for = item_execution_valid_for if item_execution_valid_for \
+                                        else self.ITEM_EXECUTION_VALID_FOR
+        self.logger.info({"action": "delete_items_finished_or_old", "keys": keys,
+                          "message":"start items deletion"})
         
         items = self.get_items(keys)   
-        items_to_delete = [item[f'{self.primary_key}'] for item in items if self.is_item_deletable(item, item_execution_valid_for)]
+        items_to_delete = [item[f'{self.primary_key}'] for item in items 
+                           if self.is_item_deletable(item, item_execution_valid_for)]
         self.logger.info({"action": "items_to_delete", "items": items_to_delete})
         self.delete_items(items_to_delete)
 
@@ -135,7 +142,8 @@ class LambdaDynamoLock:
         updated_at_str = item.get('updated_at')
         updated_at = datetime.strptime(updated_at_str, "%Y-%m-%dT%H:%M:%S.%f")
         time_limit = datetime.now() - timedelta(minutes=item_execution_valid_for)
-        #an item could be deleted after item_execution_valid_for min or if the status is STATUS_EXECUTION_FINISHED
+        #an item could be deleted after item_execution_valid_for min or 
+        # if the status is STATUS_EXECUTION_FINISHED
         return status_execution == self.STATUS_EXECUTION_FINISHED or updated_at < time_limit
 
     # method to delete keys
@@ -165,7 +173,8 @@ class LambdaDynamoLock:
         )
 
     # method to wait for all instances to finish
-    def wait_other_instances_finish(self, keys: list[str], timeout:int=None, time_to_retry:int=None):
+    def wait_other_instances_finish(self, keys: list[str], timeout:int=None,
+                                    time_to_retry:int=None):
         start_time = time.time()
         remaining_ids = keys.copy()
         timeout = timeout if timeout else self.MAX_TIME_TO_CHECK_STATUS
@@ -175,18 +184,22 @@ class LambdaDynamoLock:
             for key in remaining_ids.copy():
                 try:
                     response = self.table.get_item(Key={f'{self.primary_key}': key})
-                    if 'Item' in response and response['Item']['status_execution'] == self.STATUS_EXECUTION_FINISHED:
+                    if 'Item' in response and \
+                        response['Item']['status_execution'] == self.STATUS_EXECUTION_FINISHED:
                         remaining_ids.remove(key)
                 except Exception as e:
-                    self.logger.error({"action": "wait_for_all_executions_to_finish_error", "error": e, "key":key})
+                    self.logger.error({"action": "wait_for_all_executions_to_finish_error", 
+                                       "error": e, "key":key})
                     raise
             if remaining_ids:
-                self.logger.info({"action": "wait_for_all_executions_to_finish", "remaining_ids": remaining_ids})
+                self.logger.info({"action": "wait_for_all_executions_to_finish",
+                                  "remaining_ids": remaining_ids})
                 time.sleep(time_to_retry)
 
         if not remaining_ids:
             self.logger.info({"action": "all_executions_finished"})
             return True
         else:
-            self.logger.error({"action": "all_executions_not_finished", "remaining_ids": remaining_ids})
+            self.logger.error({"action": "all_executions_not_finished",
+                               "remaining_ids": remaining_ids})
             return False

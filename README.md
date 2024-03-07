@@ -1,20 +1,20 @@
-# LambdaDynamoLock
+# AtomicExecutionControl
 
-`LambdaDynamoLock` is a Python library designed to ensure atomic executions within AWS Lambda functions by leveraging DynamoDB. It provides a mechanism to prevent concurrent executions of Lambda functions that could lead to race conditions or duplicate processing. This library is particularly useful for distributed applications where Lambda functions are triggered in response to events and require coordination or state management.
+`AtomicExecutionControl` is a Python library designed to ensure atomic executions within AWS Lambda functions, Fargate, EC2 or other AWS services, by leveraging DynamoDB. It provides a mechanism to prevent concurrent executions of your functions that could lead to race conditions or duplicate processing. This library is particularly useful for distributed applications where Lambda (Fargate, EC2...) functions are triggered in response to events and require coordination or state management.
 
 ## Features
 
-- **Atomic Execution**: Ensures that only one instance of a Lambda function processes a specific task at a time.
+- **Atomic Execution**: Ensures that only one instance of a the function processes a specific task at a time.
 - **Status Management**: Tracks the execution status of tasks in DynamoDB, marking them as in progress or finished.
 - **Timeout Handling**: Supports time-based expiry for task locks, making it resilient to failures or stalls in execution.
-- **Easy Integration**: Designed to be easily integrated into existing AWS Lambda functions with minimal configuration.
+- **Easy Integration**: Designed to be easily integrated into existing AWS Lambda, Fargate or EC2 functions with minimal configuration.
 
 ## Installation
 
-Install `LambdaDynamoLock` using pip:
+Install `AtomicExecutionControl` using pip:
 
 ```bash
-pip install lambda_dynamo_lock
+pip install atomic_execution_control
 ```
 
 ## Prerequisites
@@ -25,15 +25,15 @@ A DynamoDB table set up for tracking execution statuses.
 Below is a quick example to help you get started:
 
 ```python
-from lambda_dynamo_lock import LambdaDynamoLock
+from atomic_execution_control import AtomicExecutionControl
 import os
 
 # DynamoDB table and primary key
 TABLE_NAME = 'YourDynamoDBTableName'
 PRIMARY_KEY = 'YourPrimaryKey'
 
-# Initialize LambdaDynamoLock
-ldl = LambdaDynamoLock(
+# Initialize AtomicExecutionControl
+ldl = AtomicExecutionControl(
     table_name=TABLE_NAME,
     primary_key=PRIMARY_KEY,
     region_name="eu-west-1",
@@ -65,7 +65,7 @@ else:
 
 ## Configuration
 
-LambdaDynamoLock can be configured with several parameters at initialization to fit your needs:
+AtomicExecutionControl can be configured with several parameters at initialization to fit your needs:
 
 **table_name:** Name of the DynamoDB table used for tracking execution.
 **primary_key:** The primary key attribute name in your DynamoDB table.
@@ -85,7 +85,7 @@ LambdaDynamoLock can be configured with several parameters at initialization to 
 
 ## Support and Contact
 
-Having trouble with `LambdaDynamoLock`? Check out our [GitHub issues](https://github.com/jdaarevalo/lambda_dynamo_lock/issues) or contact support and we’ll help you sort it out. Feel free to wirte a message to jdaarevalo@gmail.com
+Having trouble with `AtomicExecutionControl`? Check out our [GitHub issues](https://github.com/jdaarevalo/atomic_execution_control/issues) or contact support and we’ll help you sort it out. Feel free to wirte a message to jdaarevalo@gmail.com
 
 
 ## Contributing
