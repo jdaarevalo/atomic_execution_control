@@ -1,6 +1,8 @@
 # AtomicExecutionControl
 
-`AtomicExecutionControl` is a Python library designed to ensure atomic executions within AWS Lambda functions, Fargate, EC2 or other AWS services, by leveraging DynamoDB. It provides a mechanism to prevent concurrent executions of your functions that could lead to race conditions or duplicate processing. This library is particularly useful for distributed applications where Lambda (Fargate, EC2...) functions are triggered in response to events and require coordination or state management.
+`AtomicExecutionControl` is a Python library crafted to address the complexities of ensuring atomic operations across distributed applications, particularly those deployed on AWS services like Lambda, Fargate, and EC2. By leveraging DynamoDB, this library offers a robust mechanism to prevent concurrent executions, thus mitigating race conditions and duplicate processing risks. Whether you're handling event-driven workflows, orchestrating microservices, or ensuring data integrity across distributed systems, `AtomicExecutionControl` simplifies state management and execution coordination, making your applications more reliable, efficient and most important 'atomic'.
+
+
 
 ## Features
 
@@ -33,7 +35,7 @@ TABLE_NAME = 'YourDynamoDBTableName'
 PRIMARY_KEY = 'YourPrimaryKey'
 
 # Initialize AtomicExecutionControl
-ldl = AtomicExecutionControl(
+aec = AtomicExecutionControl(
     table_name=TABLE_NAME,
     primary_key=PRIMARY_KEY,
     region_name="eu-west-1",
@@ -44,33 +46,37 @@ ldl = AtomicExecutionControl(
 date_to_run = '2023-01-01'
 
 # delete items in Dynamo for old executions
-ldl.delete_items_finished_or_old(keys=[date_to_run], item_execution_valid_for=20)
+aec.delete_items_finished_or_old(keys=[date_to_run], item_execution_valid_for=20)
 
 # write in Dynamo the date_to_run and block other executions to the same key
-result = ldl.write_atomically_a_key(key=date_to_run)
+result = aec.write_atomically_a_key(key=date_to_run)
 
 if result:
     # If lock is acquired, perform your task
+    
     print("Lock acquired, proceeding with task.")
+    
     ## run_your_etl(date_to_run)
+    
     # Remember to update the status to 'finished' after completing your task
-    ldl.update_status(key=date_to_run)
+    aec.update_status(key=date_to_run)
 else:
     # If lock couldn't be acquired, another instance is already processing the task
     print("Task already in progress by another instance.")
     # wait until other instances with the same key finish
-    ldl.wait_other_instances_finish(keys=[date_to_run])
+    aec.wait_other_instances_finish(keys=[date_to_run])
 
 ```
 
 ## Configuration
 
-AtomicExecutionControl can be configured with several parameters at initialization to fit your needs:
+`AtomicExecutionControl` can be configured with the following parameters during initialization:
 
-**table_name:** Name of the DynamoDB table used for tracking execution.
-**primary_key:** The primary key attribute name in your DynamoDB table.
-**region_name:** AWS region where your DynamoDB table is located.
-**endpoint_url:** Custom endpoint URL, useful for local testing with DynamoDB Local.
+- **`table_name`** (required): The name of the DynamoDB table used for tracking execution.
+- **`primary_key`** (required): The primary key attribute name in your DynamoDB table.
+- **`region_name`** (optional, default=`"eu-west-1"`): The AWS region where your DynamoDB table is located.
+- **`endpoint_url`** (optional): Custom endpoint URL, useful for local testing with DynamoDB Local.
+
 
 
 ### Additional method parameters:
@@ -85,7 +91,7 @@ AtomicExecutionControl can be configured with several parameters at initializati
 
 ## Support and Contact
 
-Having trouble with `AtomicExecutionControl`? Check out our [GitHub issues](https://github.com/jdaarevalo/atomic_execution_control/issues) or contact support and we’ll help you sort it out. Feel free to wirte a message to jdaarevalo@gmail.com
+If you encounter any issues or have questions about `AtomicExecutionControl`, don't hesitate to reach out. You can [file an issue](https://github.com/jdaarevalo/atomic_execution_control/issues) on our GitHub repository or email us directly at jdaarevalo@gmail.com. We're also open to feedback and suggestions to make `AtomicExecutionControl` even better!
 
 
 ## Contributing
