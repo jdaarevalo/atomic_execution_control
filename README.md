@@ -82,14 +82,26 @@ TABLE_NAME = 'YourDynamoDBTableName'
 PRIMARY_KEY = 'YourPrimaryKey'
 
 # Test also in your local environment 
+# verify the endpoint_url, this url "http://localhost:8000" is also valid.
 endpoint_url = "http://docker.for.mac.localhost:8000/" if os.environ.get("AWS_SAM_LOCAL") else None
-
+ 
 # Initialize AtomicExecutionControl
 aec = AtomicExecutionControl(
     table_name=TABLE_NAME,
     primary_key=PRIMARY_KEY,
     region_name="eu-west-1",
     endpoint_url=endpoint_url
+)
+
+# In case you already log into an specific AWS account via AWS Single Sign-On (SSO)
+# you can send the profile_name parameter as follow.
+profile_name =  'AwsProfileName'
+aec = AtomicExecutionControl(
+    table_name=TABLE_NAME,
+    primary_key=PRIMARY_KEY,
+    region_name="eu-west-1",
+    endpoint_url=endpoint_url,
+    profile_name=profile_name
 )
 
 # Assume you have an event-driven architecture where multiple events 
