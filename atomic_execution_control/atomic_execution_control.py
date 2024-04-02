@@ -31,15 +31,22 @@ except ImportError:
 
 class AtomicExecutionControl:
     def __init__(self, table_name:str, primary_key:str, region_name:str='eu-west-1',
-                 endpoint_url:str=None, logger=None):
+                 endpoint_url:str=None, logger=None, profile_name:str=None):
         self.table_name = table_name
         self.primary_key = primary_key
         self.region_name = region_name
         self.endpoint_url = endpoint_url
-        self.dynamodb_resource = boto3.resource('dynamodb', region_name=self.region_name,
-                                                endpoint_url=self.endpoint_url)
-        self.dynamodb_client = boto3.client('dynamodb', region_name=self.region_name,
+        self.profile_name = profile_name
+
+        # A custom session is created with the given profile_name parameter,
+        # otherwise AWS client will use the default session
+        # clients or resource clients will be related to the session
+        self.session = boto3.session.Session(profile_name=profile_name)
+        self.dynamodb_client = self.session.client('dynamodb', region_name=self.region_name,
                                             endpoint_url=self.endpoint_url)
+        self.dynamodb_resource = self.session.resource('dynamodb', region_name=self.region_name,
+                                                endpoint_url=self.endpoint_url)
+
         self.table = self.dynamodb_resource.Table(self.table_name)
         self.ITEM_EXECUTION_VALID_FOR = 20 # minutes
         self.TIME_TO_RETRY_CHECK_STATUS = 20 # seconds
@@ -48,6 +55,23 @@ class AtomicExecutionControl:
         self.STATUS_EXECUTION_IN_PROGRESS = "IN_PROGRESS"
         # Initialize or use the provided logger
         self.logger = logger if logger else Logger()
+        self.check_dynamodb_connection()
+
+    def check_dynamodb_connection(self) -> None:
+        try:
+            self.dynamodb_client.describe_table(TableName=self.table_name)
+            self.logger.info({
+                "message": f"Successfully connected to dynamodb table {self.table_name}",
+                "status": 'SUCCEEDED',
+                "action": "check_dynamodb_connection"
+            })
+        except ClientError as exception:
+            self.logger.error({
+                    "message": "Error checking connection to DynamoDB table",
+                    "error": exception.response['Error']['Message'],
+                    "status": 'FAILED',
+                    "action": "check_dynamodb_connection"
+                })
 
     def _log(self, level, message, **kwargs):
         if hasattr(self.logger, 'structure_logs'):  # Check if aws_lambda_powertools.Logger
